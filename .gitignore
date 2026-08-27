@@ -1,0 +1,20 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+app/build/
+keystore.properties
+*.jks
+*.keystore
+
+# 项目规划文档（仅本地保留，不入库）
+PLAN.md
+
+# Kotlin / Android Studio 构建产物
+.kotlin/
+*.stray
