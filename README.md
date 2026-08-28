@@ -1,5 +1,7 @@
 # 照样相机 PoseCam（Android）
 
+[![Release Build](https://github.com/DouyuShinyruo/PoseCam-Android/actions/workflows/release.yml/badge.svg)](https://github.com/DouyuShinyruo/PoseCam-Android/actions/workflows/release.yml)
+
 **照着参考图，拍出同款。** 一款"能贴参考图的相机"：把姿势/构图参考图叠在取景器上，
 随手拍出同款照片。个人学习项目，灵感来自 iOS 上的同类产品（详见 PLAN.md 调研部分）。
 
