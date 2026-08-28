@@ -30,10 +30,15 @@ fun ReferenceOverlay(
     overlay: OverlayState,
     original: ImageBitmap,
     wireframe: ImageBitmap?,
+    skeleton: ImageBitmap? = null,
     onTap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val bitmap = if (overlay.mode == RefMode.WIREFRAME && wireframe != null) wireframe else original
+    val bitmap = when {
+        overlay.mode == RefMode.SKELETON && skeleton != null -> skeleton
+        overlay.mode == RefMode.WIREFRAME && wireframe != null -> wireframe
+        else -> original
+    }
 
     // 参考图隐藏时不接管手势，点按取景器不会误触模式切换
     val gestureModifier = if (overlay.visible) {

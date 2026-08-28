@@ -20,8 +20,8 @@ android {
         applicationId = "com.posecam.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.3.6"
+        versionCode = 10
+        versionName = "0.4.0"
     }
 
     signingConfigs {
@@ -75,6 +75,8 @@ dependencies {
     implementation("androidx.camera:camera-view:$camerax")
 
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+
+    implementation("com.google.mediapipe:tasks-vision:1.0.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.6")
 }

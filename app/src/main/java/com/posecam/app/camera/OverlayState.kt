@@ -7,7 +7,8 @@ import androidx.compose.runtime.setValue
 
 enum class RefMode(val label: String) {
     ORIGINAL("原图"),
-    WIREFRAME("线框")
+    WIREFRAME("线框"),
+    SKELETON("骨架")
 }
 
 /**
