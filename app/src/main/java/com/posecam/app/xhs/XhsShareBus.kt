@@ -14,7 +14,10 @@ object XhsShareBus {
     var sharedUrl by mutableStateOf<String?>(null)
 
     /** 每完成一次导入 +1，相机页监听它刷新素材列表 */
-    var importedCount by mutableIntStateOf(0)
+    var importedTick by mutableIntStateOf(0)
+
+    /** 刚导入成功的最新文件路径，相机页自动设为参考图（闭环） */
+    var latestImportedPath by mutableStateOf<String?>(null)
 
     // 注意：真实分享文本是 markdown 链接格式 [url](url)，且短链域名是 xhslink.cn；
     // URL 字符集用白名单，避免吞进 ]、) 等符号

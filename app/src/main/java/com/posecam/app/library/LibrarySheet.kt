@@ -87,14 +87,14 @@ fun LibrarySheet(
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(horizontal = 16.dp)) {
             TabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("灵感库") })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("我的素材") })
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("我的素材") })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("示例") })
             }
 
             Spacer(Modifier.height(12.dp))
 
             when (tab) {
-                0 -> LazyVerticalGrid(
+                1 -> LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -139,7 +139,7 @@ fun LibrarySheet(
                     }
                 }
 
-                1 -> Column {
+                0 -> Column {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,

@@ -160,18 +160,7 @@ fun CameraScreen() {
     var refWireframe by remember { mutableStateOf<ImageBitmap?>(null) }
     var refSkeleton by remember { mutableStateOf<ImageBitmap?>(null) }
     var refContour by remember { mutableStateOf<ImageBitmap?>(null) }
-    var wfDetail by remember { mutableStateOf(0.5f) }
     var myFiles by remember { mutableStateOf(MyLibrary.list(context)) }
-    val wfDetailLabel = when (wfDetail) {
-        0.25f -> "简洁"
-        0.8f -> "精细"
-        else -> "标准"
-    }
-
-    // 小红书导入完成后刷新素材列表
-    LaunchedEffect(XhsShareBus.importedCount) {
-        myFiles = MyLibrary.list(context)
-    }
 
     LaunchedEffect(Unit) {
         overlay.alpha = settings.defaultAlpha
@@ -191,11 +180,11 @@ fun CameraScreen() {
     }
 
     // 线稿生成：参考图或精度变化时重算
-    LaunchedEffect(refBitmap, wfDetail) {
+    LaunchedEffect(refBitmap) {
         val bitmap = refBitmap ?: return@LaunchedEffect
         refWireframe = null
         val sketch = withContext(Dispatchers.Default) {
-            EdgeDetector.toSketch(bitmap, detail = wfDetail)
+            EdgeDetector.toSketch(bitmap)
         }
         refWireframe = sketch.asImageBitmap()
     }
@@ -239,6 +228,15 @@ fun CameraScreen() {
         setReferenceFromKey(settings.lastReference ?: "res:insp_street_walk")
     }
 
+    // 小红书导入完成后：刷新素材列表 + 自动把最新导入的图设为参考图（闭环）
+    LaunchedEffect(XhsShareBus.importedTick) {
+        myFiles = MyLibrary.list(context)
+        XhsShareBus.latestImportedPath?.let { path ->
+            XhsShareBus.latestImportedPath = null
+            setReferenceFromKey("file:$path")
+        }
+    }
+
     // ---------- 相册选图 ----------
     val pickMedia = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
@@ -270,10 +268,13 @@ fun CameraScreen() {
                 }
                 withContext(Dispatchers.Main) {
                     myFiles = MyLibrary.list(context)
-                    toast = if (importedCount == uris.size) {
-                        "已导入 ${importedCount} 张参考图"
+                    if (importedCount > 0) {
+                        MyLibrary.list(context).firstOrNull()?.let { newest ->
+                            setReferenceFromKey("file:${newest.absolutePath}")
+                        }
+                        toast = "已导入 $importedCount/${uris.size} 张，最新一张已设为参考图"
                     } else {
-                        "导入成功 $importedCount / ${uris.size} 张"
+                        toast = "导入失败，请重试"
                     }
                 }
             }
@@ -458,17 +459,6 @@ fun CameraScreen() {
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = MaterialTheme.colorScheme.surface
-                    ) {
-                        Text(
-                            "照样相机",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
-                    }
                     Spacer(Modifier.weight(1f))
                     LabeledIcon(
                         icon = Icons.Filled.Grid3x3,
@@ -626,16 +616,6 @@ fun CameraScreen() {
                                 modifier = Modifier
                                     .align(Alignment.TopCenter)
                                     .padding(top = 10.dp)
-                                    .clickable(
-                                        enabled = overlay.mode == RefMode.WIREFRAME &&
-                                            refContour == null && refSkeleton == null
-                                    ) {
-                                        wfDetail = when (wfDetail) {
-                                            0.25f -> 0.5f
-                                            0.5f -> 0.8f
-                                            else -> 0.25f
-                                        }
-                                    }
                             ) {
                                 Text(
                                     text = when {
@@ -644,7 +624,7 @@ fun CameraScreen() {
                                         refContour != null || refSkeleton != null ->
                                             "线框 · 人像模式"
                                         refWireframe == null -> "分析中…"
-                                        else -> "线框·$wfDetailLabel · 点按调精度"
+                                        else -> "线框"
                                     },
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color.White,
@@ -708,7 +688,7 @@ fun CameraScreen() {
                     )
                     LabeledIcon(
                         icon = Icons.Filled.Collections,
-                        label = "灵感库",
+                        label = "素材库",
                         active = false,
                         onClick = { showLibrary = true }
                     )
@@ -740,14 +720,14 @@ fun CameraScreen() {
                     )
                     LabeledIcon(
                         icon = Icons.Filled.Layers,
-                        label = if (compositeOn) "合成 开" else "合成 关",
+                        label = "印参考图",
                         active = compositeOn,
                         onClick = {
                             compositeOn = !compositeOn
                             toast = if (compositeOn) {
-                                "合成开：拍照时会把参考图叠进成片"
+                                "印参考图开：拍照时会把参考线叠进成片"
                             } else {
-                                "合成关：拍出干净照片，不叠加参考图"
+                                "印参考图关：拍出干净照片，不叠加参考线"
                             }
                         }
                     )
@@ -823,7 +803,7 @@ fun CameraScreen() {
                     listOf(
                         "① 拖拽 / 双指缩放参考图，滑杆调透明度，一键居中/左半/右半对齐",
                         "② 点按参考图切换 原图 / 线框；线框自动优化：人像显示轮廓+骨架，风景显示线稿",
-                        "③ 快门拍照（支持音量键）；右下「合成」决定参考图是否印进成片",
+                        "③ 快门拍照（支持音量键）；右下「印参考图」开关决定照片里是否叠参考线",
                         "④ 小红书导入：笔记页「分享 → 复制链接」，回到 app 自动提示"
                     ).forEach { tip ->
                         Text(

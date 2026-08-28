@@ -20,8 +20,8 @@ android {
         applicationId = "com.posecam.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 13
-        versionName = "0.5.1"
+        versionCode = 14
+        versionName = "0.6.0"
 
         // 只打包真机架构（x86/x86_64 仅为模拟器，MediaPipe 库会使包体翻倍）
         ndk {

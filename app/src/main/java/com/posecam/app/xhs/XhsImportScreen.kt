@@ -177,17 +177,22 @@ fun XhsImportScreen(url: String, onClose: () -> Unit) {
         val urls = selected.toList()
         scope.launch(Dispatchers.IO) {
             var ok = 0
+            var firstImported: java.io.File? = null
             urls.forEach { u ->
-                if (MyLibrary.importFromUrl(context, u, DESKTOP_UA, XHS_REFERER) != null) {
+                val imported = MyLibrary.importFromUrl(context, u, DESKTOP_UA, XHS_REFERER)
+                if (imported != null) {
                     ok++
+                    if (firstImported == null) firstImported = imported
                 }
             }
             withContext(Dispatchers.Main) {
                 importing = false
-                XhsShareBus.importedCount += 1
+                XhsShareBus.latestImportedPath = firstImported?.absolutePath
+                XhsShareBus.importedTick += 1
                 Toast.makeText(
                     context,
-                    "已导入 $ok/${urls.size} 张到我的素材",
+                    if (ok > 0) "已导入 $ok/${urls.size} 张，最新一张已设为参考图"
+                    else "导入失败，请重试",
                     Toast.LENGTH_SHORT
                 ).show()
                 onClose()
