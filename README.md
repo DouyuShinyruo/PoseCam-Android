@@ -9,7 +9,8 @@
 
 - 相机取景：前/后摄、手电筒、三分网格、拍摄倒计时（3s/10s）、音量键快门
 - 参考图叠加：拖拽 / 双指缩放旋转 / 透明度 / 隐藏 / 复位 / 一键 居中·左半·右半 对齐
-- 点按参考图切换 **原图 / 线框** 模式（Canny 风格线稿：外框 + 结构线，自动去纹理噪声）
+- 点按参考图切换 **原图 / 线框 / 骨架** 三模式
+- 线框（Canny 风格线稿，自动去纹理噪声）+ **骨架**（MediaPipe 33 关键点火柴人，摆姿势专用，端侧离线）
 - 线框精度三档：简洁 / 标准 / 精细（线框模式点顶部标签切换）
 - 内置灵感库（街拍/户外/美食/多人/自拍/室内，12 张离线模板）+ 我的素材库
 - 素材批量导入、星标收藏（收藏优先 + 最近使用排序）
@@ -31,7 +32,7 @@
 
 ```powershell
 .\gradlew.bat assembleDebug     # 调试版 app/build/outputs/apk/debug/
-.\gradlew.bat assembleRelease   # 签名正式版 app/build/outputs/apk/release/（约 12MB）
+.\gradlew.bat assembleRelease   # 签名正式版 app/build/outputs/apk/release/（约 39MB）
 ```
 
 签名信息在项目根目录 `keystore.properties`（已 gitignore），密钥库为 `app/pose-release.jks`。
@@ -49,6 +50,7 @@ app/src/main/java/com/posecam/app/
 │   ├── Composite.kt          拍照合成
 │   └── ShutterTrigger.kt     音量键快门触发器
 ├── wireframe/EdgeDetector.kt 线框模式（Canny 风格流水线）
+├── wireframe/PoseSkeleton.kt  骨架模式（MediaPipe Pose）
 ├── library/                  灵感库 + 我的素材库（收藏/批量导入）
 ├── result/ResultScreen.kt    成片预览/对比/分享
 ├── data/AppSettings.kt       设置持久化
