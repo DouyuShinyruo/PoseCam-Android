@@ -18,3 +18,5 @@ PLAN.md
 # Kotlin / Android Studio 构建产物
 .kotlin/
 *.stray
+# APK 产物走 GitHub Release，不入库
+*.apk
