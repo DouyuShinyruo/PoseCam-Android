@@ -353,12 +353,9 @@ fun CameraScreen() {
                             ) {
                             val refForMode =
                                 when {
-                                    overlay.mode == RefMode.CONTOUR && refContour != null ->
-                                        refContour!!.asAndroidBitmap()
-                                    overlay.mode == RefMode.CONTOUR && refSkeleton != null ->
-                                        refSkeleton!!.asAndroidBitmap()
-                                    overlay.mode == RefMode.SKELETON && refSkeleton != null ->
-                                        refSkeleton!!.asAndroidBitmap()
+                                    overlay.mode != RefMode.WIREFRAME -> refBitmapSnapshot
+                                    refContour != null -> refContour!!.asAndroidBitmap()
+                                    refSkeleton != null -> refSkeleton!!.asAndroidBitmap()
                                     overlay.mode == RefMode.WIREFRAME && refWireframe != null ->
                                         refWireframe!!.asAndroidBitmap()
                                     else -> refBitmapSnapshot
@@ -629,7 +626,10 @@ fun CameraScreen() {
                                 modifier = Modifier
                                     .align(Alignment.TopCenter)
                                     .padding(top = 10.dp)
-                                    .clickable(enabled = overlay.mode == RefMode.WIREFRAME) {
+                                    .clickable(
+                                        enabled = overlay.mode == RefMode.WIREFRAME &&
+                                            refContour == null && refSkeleton == null
+                                    ) {
                                         wfDetail = when (wfDetail) {
                                             0.25f -> 0.5f
                                             0.5f -> 0.8f
@@ -639,20 +639,12 @@ fun CameraScreen() {
                             ) {
                                 Text(
                                     text = when {
-                                        overlay.mode == RefMode.CONTOUR &&
-                                            refContour == null && refSkeleton == null ->
-                                            "未检测到人物 · 点图切换"
-                                        overlay.mode == RefMode.CONTOUR ->
-                                            "轮廓 · 姿势与形体"
-                                        overlay.mode == RefMode.SKELETON && refSkeleton == null ->
-                                            "未检测到人物 · 点图切换"
-                                        overlay.mode == RefMode.SKELETON ->
-                                            "骨架 · 适合摆姿势"
-                                        overlay.mode == RefMode.WIREFRAME && refWireframe == null ->
-                                            "线稿生成中…"
-                                        overlay.mode == RefMode.WIREFRAME ->
-                                            "线框·$wfDetailLabel · 点按调精度"
-                                        else -> "${overlay.mode.label} · 点按参考图切换"
+                                        overlay.mode == RefMode.ORIGINAL ->
+                                            "原图 · 点按参考图切换"
+                                        refContour != null || refSkeleton != null ->
+                                            "线框 · 人像模式"
+                                        refWireframe == null -> "分析中…"
+                                        else -> "线框·$wfDetailLabel · 点按调精度"
                                     },
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color.White,
@@ -830,7 +822,7 @@ fun CameraScreen() {
                     Spacer(Modifier.height(12.dp))
                     listOf(
                         "① 拖拽 / 双指缩放参考图，滑杆调透明度，一键居中/左半/右半对齐",
-                        "② 点按参考图循环 原图 / 线框 / 骨架 / 轮廓；线框点顶部标签调精度",
+                        "② 点按参考图切换 原图 / 线框；线框自动优化：人像显示轮廓+骨架，风景显示线稿",
                         "③ 快门拍照（支持音量键）；右下「合成」决定参考图是否印进成片",
                         "④ 小红书导入：笔记页「分享 → 复制链接」，回到 app 自动提示"
                     ).forEach { tip ->
@@ -858,9 +850,9 @@ fun CameraScreen() {
     val refOriginalImg = remember(refBitmap) { refBitmap?.asImageBitmap() }
     val compareReference =
         when {
-            overlay.mode == RefMode.CONTOUR && (refContour != null || refSkeleton != null) ->
-                refContour ?: refSkeleton
-            overlay.mode == RefMode.SKELETON && refSkeleton != null -> refSkeleton
+            overlay.mode != RefMode.WIREFRAME -> refOriginalImg
+            refContour != null -> refContour
+            refSkeleton != null -> refSkeleton
             overlay.mode == RefMode.WIREFRAME && refWireframe != null -> refWireframe
             else -> refOriginalImg
         }

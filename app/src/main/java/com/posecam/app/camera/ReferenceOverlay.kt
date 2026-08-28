@@ -36,9 +36,10 @@ fun ReferenceOverlay(
     modifier: Modifier = Modifier
 ) {
     val bitmap = when {
-        overlay.mode == RefMode.CONTOUR && contour != null -> contour
-        overlay.mode == RefMode.SKELETON && skeleton != null -> skeleton
-        overlay.mode == RefMode.WIREFRAME && wireframe != null -> wireframe
+        overlay.mode != RefMode.WIREFRAME -> original
+        contour != null -> contour          // 有人像：轮廓+骨架（自动优先）
+        skeleton != null -> skeleton        // 掩码失败但有骨架
+        wireframe != null -> wireframe      // 无人像：边缘线稿
         else -> original
     }
 
