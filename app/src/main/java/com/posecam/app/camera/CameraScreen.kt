@@ -159,6 +159,7 @@ fun CameraScreen() {
     var refBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var refWireframe by remember { mutableStateOf<ImageBitmap?>(null) }
     var refSkeleton by remember { mutableStateOf<ImageBitmap?>(null) }
+    var refContour by remember { mutableStateOf<ImageBitmap?>(null) }
     var wfDetail by remember { mutableStateOf(0.5f) }
     var myFiles by remember { mutableStateOf(MyLibrary.list(context)) }
     val wfDetailLabel = when (wfDetail) {
@@ -203,10 +204,12 @@ fun CameraScreen() {
     LaunchedEffect(refBitmap) {
         val bitmap = refBitmap ?: return@LaunchedEffect
         refSkeleton = null
-        val skeleton = withContext(Dispatchers.Default) {
-            PoseSkeleton.detectAndRender(context, bitmap)
+        refContour = null
+        val art = withContext(Dispatchers.Default) {
+            PoseSkeleton.detect(context, bitmap)
         }
-        refSkeleton = skeleton?.asImageBitmap()
+        refSkeleton = art.skeleton?.asImageBitmap()
+        refContour = art.contour?.asImageBitmap()
     }
 
     fun setReferenceFromKey(key: String?) {
@@ -350,6 +353,10 @@ fun CameraScreen() {
                             ) {
                             val refForMode =
                                 when {
+                                    overlay.mode == RefMode.CONTOUR && refContour != null ->
+                                        refContour!!.asAndroidBitmap()
+                                    overlay.mode == RefMode.CONTOUR && refSkeleton != null ->
+                                        refSkeleton!!.asAndroidBitmap()
                                     overlay.mode == RefMode.SKELETON && refSkeleton != null ->
                                         refSkeleton!!.asAndroidBitmap()
                                     overlay.mode == RefMode.WIREFRAME && refWireframe != null ->
@@ -605,6 +612,7 @@ fun CameraScreen() {
                                 original = original.asImageBitmap(),
                                 wireframe = refWireframe,
                                 skeleton = refSkeleton,
+                                contour = refContour,
                                 onTap = { overlay.toggleMode() },
                                 modifier = Modifier.fillMaxSize()
                             )
@@ -631,6 +639,11 @@ fun CameraScreen() {
                             ) {
                                 Text(
                                     text = when {
+                                        overlay.mode == RefMode.CONTOUR &&
+                                            refContour == null && refSkeleton == null ->
+                                            "未检测到人物 · 点图切换"
+                                        overlay.mode == RefMode.CONTOUR ->
+                                            "轮廓 · 姿势与形体"
                                         overlay.mode == RefMode.SKELETON && refSkeleton == null ->
                                             "未检测到人物 · 点图切换"
                                         overlay.mode == RefMode.SKELETON ->
@@ -817,7 +830,7 @@ fun CameraScreen() {
                     Spacer(Modifier.height(12.dp))
                     listOf(
                         "① 拖拽 / 双指缩放参考图，滑杆调透明度，一键居中/左半/右半对齐",
-                        "② 点按参考图切换 原图 / 线框 / 骨架（摆姿势用）；线框点顶部标签调精度",
+                        "② 点按参考图循环 原图 / 线框 / 骨架 / 轮廓；线框点顶部标签调精度",
                         "③ 快门拍照（支持音量键）；右下「合成」决定参考图是否印进成片",
                         "④ 小红书导入：笔记页「分享 → 复制链接」，回到 app 自动提示"
                     ).forEach { tip ->
@@ -845,6 +858,8 @@ fun CameraScreen() {
     val refOriginalImg = remember(refBitmap) { refBitmap?.asImageBitmap() }
     val compareReference =
         when {
+            overlay.mode == RefMode.CONTOUR && (refContour != null || refSkeleton != null) ->
+                refContour ?: refSkeleton
             overlay.mode == RefMode.SKELETON && refSkeleton != null -> refSkeleton
             overlay.mode == RefMode.WIREFRAME && refWireframe != null -> refWireframe
             else -> refOriginalImg

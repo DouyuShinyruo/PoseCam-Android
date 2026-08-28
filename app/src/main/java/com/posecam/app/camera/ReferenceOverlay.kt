@@ -31,10 +31,12 @@ fun ReferenceOverlay(
     original: ImageBitmap,
     wireframe: ImageBitmap?,
     skeleton: ImageBitmap? = null,
+    contour: ImageBitmap? = null,
     onTap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val bitmap = when {
+        overlay.mode == RefMode.CONTOUR && contour != null -> contour
         overlay.mode == RefMode.SKELETON && skeleton != null -> skeleton
         overlay.mode == RefMode.WIREFRAME && wireframe != null -> wireframe
         else -> original
