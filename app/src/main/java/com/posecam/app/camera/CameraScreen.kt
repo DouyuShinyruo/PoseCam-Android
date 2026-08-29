@@ -71,6 +71,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -577,7 +578,8 @@ fun CameraScreen() {
                     Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                        .padding(horizontal = 6.dp, vertical = 4.dp)
+                        .clipToBounds(),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
@@ -593,6 +595,17 @@ fun CameraScreen() {
                             modifier = Modifier.fillMaxSize()
                         )
 
+                        if (gridOn) {
+                            GridOverlay(Modifier.fillMaxSize())
+                        }
+                    }
+
+                    // 参考图叠加层：同几何但不裁剪 —— 可拖到取景框外的黑色区域显示
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .aspectRatio(3f / 4f)
+                    ) {
                         refBitmap?.let { original ->
                             ReferenceOverlay(
                                 overlay = overlay,
@@ -604,11 +617,14 @@ fun CameraScreen() {
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
+                    }
 
-                        if (gridOn) {
-                            GridOverlay(Modifier.fillMaxSize())
-                        }
-
+                    // 状态层（模式标签/拍摄中/倒计时），置于参考图之上
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .aspectRatio(3f / 4f)
+                    ) {
                         if (refBitmap != null) {
                             Surface(
                                 shape = RoundedCornerShape(14.dp),
