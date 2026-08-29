@@ -29,11 +29,20 @@ class AppSettings(context: Context) {
         get() = sp.getStringSet(KEY_FAVORITES, emptySet()) ?: emptySet()
         set(value) = sp.edit().putStringSet(KEY_FAVORITES, value).apply()
 
+    /** 最近使用的参考图 key（file:/res:，最多5张，新→旧） */
+    var recentRefs: List<String>
+        get() = sp.getString(KEY_RECENT, null)
+            ?.split('\n')
+            ?.filter { it.isNotBlank() }
+            ?: emptyList()
+        set(value) = sp.edit().putString(KEY_RECENT, value.joinToString("\n")).apply()
+
     private companion object {
         const val KEY_ALPHA = "default_alpha"
         const val KEY_COMPOSITE = "composite_on_capture"
         const val KEY_LAST_REF = "last_reference"
         const val KEY_GUIDE = "guide_shown"
         const val KEY_FAVORITES = "favorites"
+        const val KEY_RECENT = "recent_refs"
     }
 }

@@ -2,6 +2,8 @@ package com.posecam.app.library
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -16,6 +18,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -64,6 +69,7 @@ import java.io.File
 @Composable
 fun LibrarySheet(
     myFiles: List<File>,
+    recentFiles: List<File> = emptyList(),
     favorites: Set<String>,
     onToggleFavorite: (file: File) -> Unit,
     onUseInspiration: (resName: String) -> Unit,
@@ -140,6 +146,20 @@ fun LibrarySheet(
                 }
 
                 0 -> Column {
+                    if (recentFiles.isNotEmpty()) {
+                        Text(
+                            "最近使用",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(recentFiles, key = { it.absolutePath }) { file ->
+                                RecentThumb(file = file, onClick = { onUseFile(file) })
+                            }
+                        }
+                        Spacer(Modifier.height(10.dp))
+                    }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -245,6 +265,32 @@ fun LibrarySheet(
                 TextButton(onClick = { deleteTarget = null }) { Text("取消") }
             }
         )
+    }
+}
+
+@Composable
+private fun RecentThumb(file: File, onClick: () -> Unit) {
+    val bitmap by produceState<Bitmap?>(initialValue = null, file) {
+        value = withContext(Dispatchers.IO) {
+            Images.decode(file, maxDim = 300)
+        }
+    }
+    Box(
+        Modifier
+            .width(64.dp)
+            .aspectRatio(0.75f)
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onClick)
+    ) {
+        bitmap?.let { bmp ->
+            Image(
+                bitmap = bmp.asImageBitmap(),
+                contentDescription = file.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
 

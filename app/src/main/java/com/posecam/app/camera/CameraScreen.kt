@@ -43,6 +43,7 @@ import androidx.compose.material.icons.filled.Compare
 import androidx.compose.material.icons.filled.FlashlightOff
 import androidx.compose.material.icons.filled.FlashlightOn
 import androidx.compose.material.icons.filled.Grid3x3
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -91,6 +92,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.posecam.app.data.AppSettings
+import com.posecam.app.history.HistoryScreen
 import com.posecam.app.library.MyLibrary
 import com.posecam.app.library.LibrarySheet
 import com.posecam.app.result.ResultScreen
@@ -146,6 +148,18 @@ fun CameraScreen() {
     var alignPreset by remember { mutableIntStateOf(0) }    // 0=居中 1=左半 2=右半
     var guideShown by remember { mutableStateOf(settings.guideShown) }
     var favorites by remember { mutableStateOf(settings.favorites) }
+    var showHistory by remember { mutableStateOf(false) }
+    var recentFiles by remember {
+        mutableStateOf(
+            settings.recentRefs.mapNotNull { k ->
+                if (k.startsWith("file:")) {
+                    File(k.removePrefix("file:")).takeIf { it.exists() }
+                } else {
+                    null
+                }
+            }
+        )
+    }
     val haptics = LocalHapticFeedback.current
 
     LaunchedEffect(toast) {
@@ -178,6 +192,12 @@ fun CameraScreen() {
         overlay.reset()
         overlay.alpha = settings.defaultAlpha
         settings.lastReference = key
+        // 最近使用（最多5张，文件类参与素材库横条展示）
+        val recents = (listOf(key) + settings.recentRefs).distinct().take(5)
+        settings.recentRefs = recents
+        recentFiles = recents.mapNotNull { k ->
+            if (k.startsWith("file:")) File(k.removePrefix("file:")).takeIf { it.exists() } else null
+        }
     }
 
     // 线稿生成：参考图或精度变化时重算
@@ -461,6 +481,12 @@ fun CameraScreen() {
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Spacer(Modifier.weight(1f))
+                    LabeledIcon(
+                        icon = Icons.Filled.History,
+                        label = "历史",
+                        active = false,
+                        onClick = { showHistory = true }
+                    )
                     LabeledIcon(
                         icon = Icons.Filled.Grid3x3,
                         label = "网格",
@@ -756,6 +782,7 @@ fun CameraScreen() {
     if (showLibrary) {
         LibrarySheet(
             myFiles = myFiles,
+            recentFiles = recentFiles,
             favorites = favorites,
             onToggleFavorite = { file ->
                 val next = favorites.toMutableSet().apply {
@@ -859,6 +886,11 @@ fun CameraScreen() {
             onRetake = { resultUri = null },
             onDone = { resultUri = null }
         )
+    }
+
+    // 拍摄历史
+    if (showHistory) {
+        HistoryScreen(onClose = { showHistory = false })
     }
 }
 

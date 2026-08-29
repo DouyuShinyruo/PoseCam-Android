@@ -47,6 +47,7 @@ fun ReferenceOverlay(
     val gestureModifier = if (overlay.visible) {
         Modifier
             .pointerInput(Unit) {
+                var lastTapAt = 0L
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     val startTime = down.uptimeMillis
@@ -87,7 +88,14 @@ fun ReferenceOverlay(
 
                     val duration = endTime - startTime
                     if (!moved && !multiTouch && duration in 0..350) {
-                        onTap()
+                        if (down.uptimeMillis - lastTapAt < 300L) {
+                            // 双击：复位（模式切换两次回到原状态）
+                            onTap()
+                            overlay.reset()
+                        } else {
+                            onTap()
+                        }
+                        lastTapAt = down.uptimeMillis
                     }
                 }
             }
